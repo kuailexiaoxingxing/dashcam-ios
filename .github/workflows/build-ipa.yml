@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  SRC_URL: https://aka.doubaocdn.com/s/pWUfKlxXO6
+  SRC_URL: https://aka.doubaocdn.com/s/VzW5dk3CnV
 
 jobs:
   build:
@@ -39,10 +39,10 @@ jobs:
           exit $code
 
       - name: 回推编译日志
-        if: failure()
+        if: always()
         run: |
           set -euo pipefail
-          tail -n 600 /tmp/build.log > ci-log.txt || true
+          grep -E 'CompileAssetCatalog|actool|error:|BUILD' /tmp/build.log | tail -n 120 > ci-log.txt || true
           git config user.email ci@dashcam.local
           git config user.name ci
           git checkout -B ci-log
@@ -54,20 +54,18 @@ jobs:
         run: |
           set -euo pipefail
           APP=$(find ios/build/DerivedData/Build/Products -maxdepth 2 -name 'DashCamIOS.app' -type d | head -1)
-          echo "APP=$APP"
+          ls -la "$APP"
           mkdir -p dist/Payload
           cp -R "$APP" dist/Payload/
           cd dist
           zip -qry -y DashCamIOS-unsigned.ipa Payload
-          unzip -l DashCamIOS-unsigned.ipa | head -20
-          ls -lh DashCamIOS-unsigned.ipa
+          unzip -l DashCamIOS-unsigned.ipa
 
       - name: 校验产物
         run: |
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' dist/Payload/DashCamIOS.app/Info.plist
           /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' dist/Payload/DashCamIOS.app/Info.plist
           file dist/Payload/DashCamIOS.app/DashCamIOS
-          ls dist/Payload/DashCamIOS.app | head -20
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
