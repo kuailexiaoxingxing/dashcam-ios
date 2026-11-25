@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  SRC_URL: https://aka.doubaocdn.com/s/no1EP1cqtK
+  SRC_URL: https://aka.doubaocdn.com/s/pWUfKlxXO6
 
 jobs:
   build:
