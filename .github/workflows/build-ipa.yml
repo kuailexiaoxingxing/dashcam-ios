@@ -3,6 +3,8 @@ name: Build unsigned IPA
 on:
   push:
     branches: [ main ]
+    paths:
+      - '.github/workflows/build-ipa.yml'
   workflow_dispatch:
 
 env:
@@ -10,7 +12,7 @@ env:
 
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
     permissions:
       contents: write
     steps:
@@ -19,13 +21,12 @@ jobs:
           set -euo pipefail
           curl -fsSL --retry 3 -o /tmp/src.zip "$SRC_URL"
           unzip -q /tmp/src.zip -d "$GITHUB_WORKSPACE"
-          find ios -maxdepth 3 -name '*.swift' -o -maxdepth 3 -name '*.pbxproj' | sort
+          ls ios/DashCamIOS/DashCamIOS
 
       - name: 检查 Xcode
         run: |
           sudo xcode-select -s /Applications/Xcode.app
           xcodebuild -version
-          xcrun --sdk iphoneos --show-sdk-version
 
       - name: 生成应用图标
         run: |
@@ -42,9 +43,9 @@ jobs:
                   d = ((x - 512) ** 2 + (y - 520) ** 2) ** 0.5
                   if 250 <= d <= 292 or d <= 88:
                       line += bytes(green)
-                  elif (x - 820) ** 2 + (y - 200) ** 2 <= 55 ** 2:
+                  elif (x - 820) ** 2 + (y - 200) ** 2 <= 3025:
                       line += bytes(red)
-                  elif abs(y - 760) <= 9 and 200 <= x <= 824:
+                  elif 751 <= y <= 769 and 200 <= x <= 824:
                       line += bytes((235, 240, 240, 255))
                   else:
                       line += bytes(bg)
@@ -76,14 +77,14 @@ jobs:
           cp -R "$APP" dist/Payload/
           cd dist
           zip -qry -y DashCamIOS-unsigned.ipa Payload
-          unzip -l DashCamIOS-unsigned.ipa | head -20
+          unzip -l DashCamIOS-unsigned.ipa | head -25
           ls -lh DashCamIOS-unsigned.ipa
 
       - name: 校验产物
         run: |
-          set -euo pipefail
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' dist/Payload/DashCamIOS.app/Info.plist
           /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' dist/Payload/DashCamIOS.app/Info.plist
+          /usr/libexec/PlistBuddy -c 'Print :MinimumOSVersion' dist/Payload/DashCamIOS.app/Info.plist || true
           file dist/Payload/DashCamIOS.app/DashCamIOS
 
       - name: 上传构建产物
