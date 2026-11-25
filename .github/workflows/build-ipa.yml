@@ -8,11 +8,12 @@ on:
   workflow_dispatch:
 
 env:
-  SRC_URL: https://aka.doubaocdn.com/s/VzW5dk3CnV
+  SRC_URL: https://aka.doubaocdn.com/s/qSXFdzJYMh
 
 jobs:
   build:
     runs-on: macos-15
+    timeout-minutes: 30
     permissions:
       contents: write
     steps:
@@ -42,7 +43,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          grep -E 'CompileAssetCatalog|actool|error:|BUILD' /tmp/build.log | tail -n 120 > ci-log.txt || true
+          grep -E 'CompileAssetCatalog|actool|error:|warning:|BUILD' /tmp/build.log | tail -n 150 > ci-log.txt || true
           git config user.email ci@dashcam.local
           git config user.name ci
           git checkout -B ci-log
@@ -55,11 +56,12 @@ jobs:
           set -euo pipefail
           APP=$(find ios/build/DerivedData/Build/Products -maxdepth 2 -name 'DashCamIOS.app' -type d | head -1)
           ls -la "$APP"
+          test -f "$APP/index.html"
           mkdir -p dist/Payload
           cp -R "$APP" dist/Payload/
           cd dist
           zip -qry -y DashCamIOS-unsigned.ipa Payload
-          unzip -l DashCamIOS-unsigned.ipa
+          unzip -l DashCamIOS-unsigned.ipa | tail -n 20
 
       - name: 校验产物
         run: |
@@ -76,7 +78,7 @@ jobs:
       - name: 发布到 Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: DashCam iOS build ${{ github.run_number }}
-          body: 未签名 IPA（ARM64 真机包）。需用 Sideloadly 或 Xcode 重新签名后才能安装。
+          tag_name: v2.0.${{ github.run_number }}
+          name: DashCam iOS v2 build ${{ github.run_number }}
+          body: 未签名 IPA（ARM64 真机包，界面与安卓 v7 一致）。需用 Sideloadly / Xcode 重新签名后才能安装。
           files: dist/DashCamIOS-unsigned.ipa
