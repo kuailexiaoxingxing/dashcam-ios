@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  SRC_URL: https://aka.doubaocdn.com/s/qSXFdzJYMh
+  SRC_URL: https://aka.doubaocdn.com/s/hGJCmn0AbC
 
 jobs:
   build:
@@ -80,5 +80,5 @@ jobs:
         with:
           tag_name: v2.0.${{ github.run_number }}
           name: DashCam iOS v2 build ${{ github.run_number }}
-          body: 未签名 IPA（ARM64 真机包，界面与安卓 v7 一致）。需用 Sideloadly / Xcode 重新签名后才能安装。
+          body: 未签名 IPA（ARM64 真机包）。界面已同步：实时画面铺满、分段自动存进相册。需用 Sideloadly / Xcode 重新签名后才能安装。
           files: dist/DashCamIOS-unsigned.ipa
